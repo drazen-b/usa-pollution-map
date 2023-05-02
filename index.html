@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USA Pollution Map</title>
+
+    <script src="//d3js.org/d3.v3.min.js"></script>
+    <script src="//d3js.org/topojson.v1.min.js"></script>
+
+    <style>
+        body {
+            background-color: rebeccapurple;
+            margin: 0 auto;
+        }
+
+        svg {
+            background-color: darkmagenta;
+            margin: 0 auto;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <script>
+
+        var width = 960;
+        var height = 500;
+
+        var projection = d3.geo.albers();
+
+        var path = d3.geo.path()
+            .projection(projection);
+
+        var svg = d3.select("body").append("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+        // Drawing map and states on svg
+
+        d3.json("data/maps/us.json", function (err, data) {
+            svg.append("path")
+                .datum(topojson.feature(data, data.objects.land))
+                .attr("class", "land")
+                .attr("d", path);
+        });
+
+        d3.json("data/maps/us.json", function (err, data) {
+            var statesData = topojson.feature(data, data.objects.states);
+            var states = svg.selectAll("path.state")
+                .data(statesData.features)
+                .enter()
+                .append("path")
+                .classed("state", true)
+                .attr("d", path)
+                .style("fill", "blue")
+                .style("stroke", "white")
+                .style("stroke-width", 0.5)
+                .style("fill-opacity", function () { return Math.random(); });
+        })
+
+        // Mark cities on map
+
+        d3.json("data/maps/us-cities.json", function (err, data) {
+
+            d3.json("data/pollution/pollution_data.json", function (err, pollution_data) {
+
+                var cities = svg.append("g")
+                    .selectAll("circle")
+                    .data(data)
+                    .enter()
+                    .append("circle");
+
+                cities.attr("cx", function (d) {
+                    return projection([d.Longitude, d.Latitude])[0];
+                })
+                    .attr("cy", function (d) {
+                        return projection([d.Longitude, d.Latitude])[1];
+                    })
+                    .attr("r", 4) // Set the circle's radius
+                    .attr("fill", "red") // Set the circle's color
+                    .attr("opacity", 0.8) // Set the circle's opacity
+                    .attr("background-color", "white")
+                    .on("click", function (d) {
+                        var city = d.City.toLowerCase();
+                        var cityData = pollution_data.filter(function (cityAQ) {
+                            return cityAQ.City.toLowerCase() === city;
+                        });
+                        console.log(cityData);
+                        console.log(city);
+
+                    });
+
+            })
+        })
+
+
+
+    </script>
+
+</body>
+
+</html>
