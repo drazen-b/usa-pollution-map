@@ -44,6 +44,25 @@
         .city.hazardous {
             fill: #7e0023;
         }
+
+        circle[title]::after {
+            content: attr(title);
+            position: absolute;
+            z-index: 1;
+            background: white;
+            border: 1px solid black;
+            padding: 2px;
+        }
+
+        .tooltip {
+            position: absolute;
+            z-index: 9999;
+            background-color: #f9f9f9;
+            border: 1px solid #aaa;
+            border-radius: 5px;
+            padding: 10px;
+            font-size: 14px;
+        }
     </style>
 
 </head>
@@ -63,6 +82,7 @@
         var svg = d3.select("body").append("svg")
             .attr("width", width)
             .attr("height", height)
+            .attr("title", "US Cities")
             .call(d3.behavior.zoom().scaleExtent([0.3, 5]).on("zoom", onZoom));
 
         var scale = d3.scale.linear().domain([50000, 800000]).range([0, 6]);
@@ -84,10 +104,9 @@
                 .append("path")
                 .classed("state", true)
                 .attr("d", path)
-                .style("fill", "blue")
+                .style("fill", "lightblue")
                 .style("stroke", "white")
-                .style("stroke-width", 0.5)
-                .style("fill-opacity", function () { return Math.random(); });
+                .style("stroke-width", 0.5);
         })
 
         // Mark cities on map
@@ -105,15 +124,6 @@
                 cities.attr("cx", function (d) { return projection([d.Longitude, d.Latitude])[0]; })
                     .attr("cy", function (d) { return projection([d.Longitude, d.Latitude])[1]; })
                     .attr("r", 4)
-                    // .attr("background-color", "white")
-                    .on("click", function (d) {
-                        var city = d.City.toLowerCase();
-                        var cityData = pollution_data.filter(function (cityAQ) {
-                            return cityAQ.City.toLowerCase() === city;
-                        });
-                        console.log(cityData[0]["AQI Category"]);
-                        console.log(city);
-                    })
                     .attr("class", function (d) {
                         var city = d.City.toLowerCase();
                         var cityData = pollution_data.filter(function (cityAQ) {
@@ -121,7 +131,46 @@
                         });
                         var category = getAQICategory(cityData[0]["AQI Category"]);
                         return "city " + category;
+                    })
+                    .attr("title", function (d) { return d.City; }) // Add title attribute for tooltip
+                    .on("click", function (d) {
+                        var city = d.City.toLowerCase();
+                        var cityData = pollution_data.filter(function (cityAQ) {
+                            return cityAQ.City.toLowerCase() === city;
+                        });
+                        console.log(cityData[0]["AQI Category"]);
+                        console.log(city);
                     });
+
+                cities.append("title")
+                    .text(function (d) { return d.City; });
+
+                var tooltip = d3.select("body")
+                    .append("div")
+                    .attr("class", "tooltip")
+                    .style("opacity", 0);
+
+                svg.on("mousemove", function () {
+                    var mouseX = d3.mouse(this)[0];
+                    var mouseY = d3.mouse(this)[1];
+                    tooltip.style("left", mouseX + "px")
+                        .style("top", mouseY + "px");
+                });
+
+                cities.on("mouseover", function (d) {
+                    tooltip.transition()
+                        .duration(200)
+                        .style("opacity", 0.9);
+                    tooltip.html(d.City)
+                        .style("left", (d3.event.pageX + 10) + "px")
+                        .style("top", (d3.event.pageY - 28) + "px");
+                });
+
+                cities.on("mouseout", function (d) {
+                    tooltip.transition()
+                        .duration(500)
+                        .style("opacity", 0);
+                });
 
             })
         })
