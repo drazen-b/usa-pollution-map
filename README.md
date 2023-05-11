@@ -8,8 +8,3 @@ Display air pollution on the map of USA with selectable cities. When certain cit
 
 ## Datasets
 
-- https://www.kaggle.com/datasets/hasibalmuzdadid/global-air-pollution-dataset
-- https://api-ninjas.com/api/city
-- https://geojson-maps.ash.ms/
-- https://www.weatherbit.io/api/airquality-current
-- https://www.kaggle.com/datasets/pompelmo/usa-states-geojson
