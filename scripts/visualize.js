@@ -1,16 +1,14 @@
-// Define your projection and path
 var projection = d3.geoAlbersUsa().translate([480, 300]).scale(1200);
 var path = d3.geoPath().projection(projection);
 
-// Load and process the TopoJSON
 d3.json("../data/maps/us.json").then(function(us) {
-    // Convert TopoJSON to GeoJSON
+
     var geoJson = topojson.feature(us, us.objects.states);
 
-    // Select the SVG element
     var svg = d3.select("#map");
 
-    // Bind the GeoJSON data to the SVG elements
+    var tooltip = d3.select("body").append("div").attr("class", "toolTip");
+
     svg.selectAll("path")
         .data(geoJson.features)
         .enter()
@@ -20,8 +18,7 @@ d3.json("../data/maps/us.json").then(function(us) {
         .attr("stroke", "#333")
         .attr("stroke-width", 0.5);
     
-    // Load the cities data
-    d3.json("../data/maps/us-cities.json").then(function(data) {
+    d3.json("../data/pollution/cities_with_pollution_simple.json").then(function(data) {
         svg.selectAll("circle")
             .data(data)
             .enter()
@@ -33,29 +30,33 @@ d3.json("../data/maps/us.json").then(function(us) {
                 return projection([d.lng, d.lat])[1];
             })
             .attr("r", function(d) {
-                return Math.sqrt(d.population) / 500; // Scale the radius by population
+                return Math.sqrt(d.pollution_data[0].main.aqi) * 10; // Scale the radius by AQI
             })
-            .style("fill", "red")
-            .attr("opacity", "0.6");
+            .style("fill", function(d) {
+                // Color based on AQI
+                switch (d.pollution_data[0].main.aqi) {
+                    case 1:
+                        return "green";
+                    case 2:
+                        return "lightgreen";
+                    case 3:
+                        return "yellow";
+                    case 4:
+                        return "orange";
+                    case 5:
+                        return "purple";
+                    default:
+                        return "black";
+                }
+            })
+            .attr("opacity", "0.6")
+            .on("mouseover", function(event, d){
+                tooltip
+                  .style("left", (event.pageX + 10) + "px")
+                  .style("top", (event.pageY - 10) + "px")
+                  .style("display", "inline-block")
+                  .html(`City: ${d.city}<br>AQI: ${d.pollution_data[0].main.aqi}`);
+            })
+            .on("mouseout", function(d){ tooltip.style("display", "none");});
     });
 });
-
-
-
-// var path = d3.geo.path().projection(projection);
-
-// d3.json("../data/maps/us.json", function (error, us) {
-//   svg
-//     .append("path")
-//     .datum(topojson.feature(us, us.objects.land))
-//     .attr("class", "land")
-//     .attr("d", path);
-// });
-
-// d3.json("../data/pollution/cities_with_pollution.json")
-//   .then(function (data) {
-//     console.log(data);
-//   })
-//   .catch(function (error) {
-//     console.log(error);
-//   });

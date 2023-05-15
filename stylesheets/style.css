@@ -6,7 +6,12 @@ body {
     color: white;
 }
 
+
+
 svg {
+    display: block;
     margin: auto;
-    background-color: wheat;
+    background-color: black;
+    width: 920px;
+    height: 600px;
 }
