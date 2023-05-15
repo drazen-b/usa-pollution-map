@@ -6,12 +6,19 @@ body {
     color: white;
 }
 
-
-
 svg {
     display: block;
     margin: auto;
     background-color: black;
     width: 920px;
     height: 600px;
+}
+
+#city-name {
+    color: white;
+}
+
+#info {
+    margin: 30px;
+    height: 700px;
 }
