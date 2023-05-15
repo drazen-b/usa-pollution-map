@@ -7,5 +7,6 @@ body {
 }
 
 svg {
+    margin: auto;
     background-color: wheat;
 }
