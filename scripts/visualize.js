@@ -1,9 +1,7 @@
-// Change these values to adjust the size of the map
 var width = 1200;
 var height = 800;
-var scale = 1500; // This value adjusts the zoom level of the map. Increase to zoom in, decrease to zoom out.
+var scale = 1500;
 
-// Adjust the translate values to center the map
 var projection = d3.geoAlbersUsa().translate([width / 2, height / 2]).scale(scale);
 var path = d3.geoPath().projection(projection);
 
@@ -44,10 +42,10 @@ Promise.all([
       return projection([d.lng, d.lat])[1];
     })
     .attr("r", function (d) {
-      return Math.sqrt(d.pollution_data[0].main.aqi) * 10; // Scale the radius by AQI
+      return Math.sqrt(d.pollution_data[0].main.aqi) * 10; 
     })
     .style("fill", function (d) {
-      // Color based on AQI
+
       switch (d.pollution_data[0].main.aqi) {
         case 1:
           return "green";
@@ -69,7 +67,6 @@ Promise.all([
       var aqiString = "";
       var color = "white";
 
-      // Set aqiString based on AQI
       switch (aqi) {
         case 1:
           aqiString = "AQI: 1 - Good";
@@ -82,12 +79,11 @@ Promise.all([
         case 3:
           aqiString = "AQI: 3 - Moderate";
           color = "yellow";
-          break;// Change these values to adjust the size of the map
+          break;
           var width = 1200;
           var height = 800;
-          var scale = 1500; // This value adjusts the zoom level of the map. Increase to zoom in, decrease to zoom out.
+          var scale = 1500;
           
-          // Adjust the translate values to center the map
           var projection = d3.geoAlbersUsa().translate([width / 2, height / 2]).scale(scale);
         case 4:
           aqiString = "AQI: 4 - Poor";
@@ -118,10 +114,10 @@ Promise.all([
 
 function displayCityHistoricalData(cityData, pollutionData) {
   var infoContainer = d3.select("#city-info");
-  infoContainer.html(""); // Clear existing information
+  infoContainer.html("");
 
-  var width = 1200; // New width
-  var height = 800; // New height
+  var width = 1200;
+  var height = 800;
   var margin = {top: 50, right: 50, bottom: 50, left: 50};
 
   
@@ -167,7 +163,6 @@ function displayCityHistoricalData(cityData, pollutionData) {
         .attr("width", width)
         .attr("height", height);
 
-      // Compute daily average
       var dailyAvg = d3.rollups(
         cityPollution.list,
         (v) => d3.mean(v, (d) => d.components[pollutant]),
@@ -210,14 +205,12 @@ function displayCityHistoricalData(cityData, pollutionData) {
         .attr("stroke-width", 1.5)
         .attr("fill", "none");
 
-      // Create color scale
       var colorScale = d3
         .scaleLinear()
         .domain([0, highLevels[pollutant]])
         .range(["green", "red"])
         .clamp(true);
 
-      // Modify the line function to create a line made of small segments
       var line = d3
         .line()
         .x(function (d) {
@@ -228,7 +221,6 @@ function displayCityHistoricalData(cityData, pollutionData) {
         })
         .curve(d3.curveLinear);
 
-      // Add path for each segment of the line
       for (var i = 0; i < dailyAvg.length - 1; i++) {
         var startPoint = dailyAvg[i];
         var endPoint = dailyAvg[i + 1];
@@ -245,7 +237,7 @@ function displayCityHistoricalData(cityData, pollutionData) {
       }
 
       // Add axes
-      var xAxis = d3.axisBottom(xScale).tickFormat(d3.timeFormat("%B")); // Format the ticks to show month names
+      var xAxis = d3.axisBottom(xScale).tickFormat(d3.timeFormat("%B"));
 
       svg
         .append("g")
@@ -257,7 +249,6 @@ function displayCityHistoricalData(cityData, pollutionData) {
         .attr("transform", "translate(" + 50 + ",0)")
         .call(d3.axisLeft(yScale));
 
-      // Add X-axis label
       svg
         .append("text")
         .attr(
@@ -265,17 +256,16 @@ function displayCityHistoricalData(cityData, pollutionData) {
           "translate(" + width / 2 + " ," + (height - 10) + ")"
         )
         .style("text-anchor", "middle")
-        .style("fill", "white") // Set a contrasting color
+        .style("fill", "white") 
         .text("Month");
 
-      // Add Y-axis label
       svg
         .append("text")
         .attr("transform", "rotate(-90)")
-        .attr("y", 20) // Adjust the y-position
+        .attr("y", 20)
         .attr("x", 0 - height / 2)
         .style("text-anchor", "middle")
-        .style("fill", "white") // Set a contrasting color
+        .style("fill", "white")
         .text(
           pollutant.toUpperCase() + " (" + measurementUnits[pollutant] + ")"
         );
