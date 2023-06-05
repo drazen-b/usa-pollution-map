@@ -9,8 +9,8 @@ svg {
     display: block;
     margin: auto;
     background-color: black;
-    width: 1200px; /* Adjust this to change the width */
-    height: 800px; /* Adjust this to change the height */
+    width: 1200px;
+    height: 800px;
 }
 
 #city-name {
@@ -19,5 +19,21 @@ svg {
 
 #info {
     margin: 30px;
-    height: 900px; /* Adjust this to change the height of the info container */
+    height: 900px;
 }
+
+.bar-avg {
+    fill: #77b1e7;
+  }
+  
+  .bar-current {
+    fill: #c85f7f;
+  }
+
+  #footer-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    margin: 50px;
+  }

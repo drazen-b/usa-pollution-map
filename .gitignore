@@ -2,3 +2,4 @@ temp
 usa-venv
 venv
 notebooks/config.py
+data/pollution/pollution_data.json

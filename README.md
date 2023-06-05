@@ -8,3 +8,4 @@ Display air pollution on the map of USA with selectable cities. When certain cit
 
 ## Datasets
 
+First `data/pollution/pollution_data.json.tar.gz` needs to be unpacked.

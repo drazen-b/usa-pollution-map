@@ -5,6 +5,9 @@ var scale = 1500;
 var projection = d3.geoAlbersUsa().translate([width / 2, height / 2]).scale(scale);
 var path = d3.geoPath().projection(projection);
 
+var selectedAqi = 'all';
+
+
 Promise.all([
   d3.json("../data/maps/us.json"),
   d3.json("../data/pollution/pollution_data.json"),
@@ -32,7 +35,9 @@ Promise.all([
 
   svg
     .selectAll("circle")
-    .data(citiesData)
+    .data(citiesData.filter(function (d) {
+      return selectedAqi === 'all' || selectedAqi == d.pollution_data[0].main.aqi;
+    }))
     .enter()
     .append("circle")
     .attr("cx", function (d) {
@@ -42,7 +47,7 @@ Promise.all([
       return projection([d.lng, d.lat])[1];
     })
     .attr("r", function (d) {
-      return Math.sqrt(d.pollution_data[0].main.aqi) * 10; 
+      return Math.sqrt(d.pollution_data[0].main.aqi) * 10;
     })
     .style("fill", function (d) {
 
@@ -80,11 +85,6 @@ Promise.all([
           aqiString = "AQI: 3 - Moderate";
           color = "yellow";
           break;
-          var width = 1200;
-          var height = 800;
-          var scale = 1500;
-          
-          var projection = d3.geoAlbersUsa().translate([width / 2, height / 2]).scale(scale);
         case 4:
           aqiString = "AQI: 4 - Poor";
           color = "orange";
@@ -105,12 +105,82 @@ Promise.all([
         .html(`City: ${d.city}<br>${aqiString}`);
     })
     .on("mouseout", function (d) {
-      tooltip.html("");
+      if (!d.stickyTooltip) {
+        tooltip.html("").style("display", "none");
+      }
     })
     .on("click", function (event, d) {
+      d.stickyTooltip = !d.stickyTooltip;
+
+      d3.select('#cityDataContainer')
+        .style("color", 'white')
+        .html(`<h2>City: ${d.city}</h2><br>
+           State: ${d.state_name}<br>
+           Population: ${d.population}<br>
+           Density: ${d.density} people/\u33A1<br>`);
+
       displayCityHistoricalData(d, pollutionData);
     });
+
+  d3.select('#aqi-filter').dispatch('change');
+
+  d3.select('body').on('click', function (event) {
+    if (!event.target.matches('circle')) {
+      tooltip.html("").style("display", "none");
+      citiesData.forEach(function (city) {
+        city.stickyTooltip = false;
+      });
+    }
+  });
+
+  d3.select("#aqi-filter").on("change", function () {
+    selectedAqi = d3.select(this).node().value;
+
+    var circles = svg.selectAll("circle").data(citiesData.filter(function (d) {
+      return selectedAqi === 'all' || selectedAqi == d.pollution_data[0].main.aqi;
+    }));
+
+    circles.exit().remove();
+
+    circles
+      .enter()
+      .append("circle")
+      .merge(circles)
+      .attr("cx", function (d) {
+        return projection([d.lng, d.lat])[0];
+      })
+      .attr("cy", function (d) {
+        return projection([d.lng, d.lat])[1];
+      })
+      .attr("r", function (d) {
+        return Math.sqrt(d.pollution_data[0].main.aqi) * 10;
+      })
+      .style("fill", function (d) {
+
+        switch (d.pollution_data[0].main.aqi) {
+          case 1:
+            return "green";
+          case 2:
+            return "lightgreen";
+          case 3:
+            return "yellow";
+          case 4:
+            return "orange";
+          case 5:
+            return "purple";
+          default:
+            return "black";
+        }
+      })
+      .attr("opacity", "0.6");
+  });
+
+
 });
+
+
+
+
 
 function displayCityHistoricalData(cityData, pollutionData) {
   var infoContainer = d3.select("#city-info");
@@ -118,9 +188,9 @@ function displayCityHistoricalData(cityData, pollutionData) {
 
   var width = 1200;
   var height = 800;
-  var margin = {top: 50, right: 50, bottom: 50, left: 50};
+  var margin = { top: 50, right: 50, bottom: 50, left: 50 };
 
-  
+
 
   var highLevels = {
     co: 1000,
@@ -156,7 +226,7 @@ function displayCityHistoricalData(cityData, pollutionData) {
     pollutants.forEach(function (pollutant) {
       infoContainer
         .append("h3")
-        .text(cityData.city + " - Historical " + pollutant.toUpperCase());
+        .text("Historical " + pollutant.toUpperCase());
 
       var svg = infoContainer
         .append("svg")
@@ -236,7 +306,6 @@ function displayCityHistoricalData(cityData, pollutionData) {
           .attr("fill", "none");
       }
 
-      // Add axes
       var xAxis = d3.axisBottom(xScale).tickFormat(d3.timeFormat("%B"));
 
       svg
@@ -256,7 +325,7 @@ function displayCityHistoricalData(cityData, pollutionData) {
           "translate(" + width / 2 + " ," + (height - 10) + ")"
         )
         .style("text-anchor", "middle")
-        .style("fill", "white") 
+        .style("fill", "white")
         .text("Month");
 
       svg
@@ -269,6 +338,44 @@ function displayCityHistoricalData(cityData, pollutionData) {
         .text(
           pollutant.toUpperCase() + " (" + measurementUnits[pollutant] + ")"
         );
+
+      var hoverLineGroup = svg.append("g")
+        .style("pointer-events", "none")
+        .attr("opacity", 0);
+
+      var hoverLine = hoverLineGroup.append("line")
+        .attr("x1", 50)
+        .attr("x2", width - 50)
+        .style("fill", "none")
+        .attr("stroke", "white")
+        .attr("stroke-width", "0.5px");
+
+      var tooltip = hoverLineGroup.append("text")
+        .attr("class", "y-hover-text")
+        .attr("text-anchor", "start")
+        .attr("dy", "-.71em")
+        .attr("transform", "translate(70, 0)")
+        .style("fill", "white");
+
+
+      svg.append("rect")
+        .attr("width", width)
+        .attr("height", height)
+        .style("fill", "none")
+        .style("color", "white")
+        .style("pointer-events", "all")
+        .on("mouseover", function () { hoverLineGroup.style("opacity", 1); })
+        .on("mouseout", function () { hoverLineGroup.style("opacity", 0); })
+        .on("mousemove", function (event) {
+          var y0 = yScale.invert(d3.pointer(event)[1]);
+          var format = d3.format(".2f");
+
+          hoverLine.attr("y1", yScale(y0)).attr("y2", yScale(y0));
+          tooltip.attr("y", yScale(y0)).text("Y: " + format(y0));
+        });
+
+
+
     });
   } else {
     infoContainer
